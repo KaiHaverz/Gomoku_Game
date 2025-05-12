@@ -1,0 +1,3 @@
+/Users/kaihaverz/Desktop/大三下/C&C++/C++/C++大作业/gomoku_game/build/CMakeFiles/gomoku.dir
+/Users/kaihaverz/Desktop/大三下/C&C++/C++/C++大作业/gomoku_game/build/CMakeFiles/edit_cache.dir
+/Users/kaihaverz/Desktop/大三下/C&C++/C++/C++大作业/gomoku_game/build/CMakeFiles/rebuild_cache.dir
