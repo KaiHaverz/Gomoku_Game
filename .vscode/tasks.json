@@ -2,20 +2,23 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build SFML Test",
+            "label": "Build Raylib Project",
             "type": "shell",
-            "command": "mkdir -p build && clang++",
+            "command": "clang++",
             "args": [
                 "-std=c++17",
-                "-g",
-                "${workspaceFolder}/src/*.cpp",
-                "-I${workspaceFolder}/include",
+                "main.cpp",
+                "-o", "gomoku",
                 "-I/opt/homebrew/include",
                 "-L/opt/homebrew/lib",
-                "-lsfml-graphics", "-lsfml-window", "-lsfml-system",
-                "-o", "${workspaceFolder}/build/gomoku"
+                "-lraylib",
+                "-framework", "OpenGL",  // macOS 必需
+                "-framework", "Cocoa"    // macOS 必需
             ],
-            "group": { "kind": "build", "isDefault": true },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "problemMatcher": ["$gcc"]
         }
     ]

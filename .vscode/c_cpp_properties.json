@@ -3,16 +3,17 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/include",
-                "/opt/homebrew/include",  
-                
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "/opt/homebrew/include"  // 确保包含 Raylib 头文件路径
             ],
+            "defines": [],
             "macFrameworkPath": [
                 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
             ],
             "compilerPath": "/usr/bin/clang++",
-            "cppStandard": "c++17"
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "macos-clang-arm64"
         }
     ],
     "version": 4
