@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Gomoku",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/gomoku",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "environment": [{"name": "DYLD_LIBRARY_PATH", "value": "/opt/homebrew/lib"}],
+            "preLaunchTask": "Build SFML Test"
+        }
+    ]
+}

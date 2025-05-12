@@ -1,0 +1,22 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build SFML Test",
+            "type": "shell",
+            "command": "mkdir -p build && clang++",
+            "args": [
+                "-std=c++17",
+                "-g",
+                "${workspaceFolder}/src/*.cpp",
+                "-I${workspaceFolder}/include",
+                "-I/opt/homebrew/include",
+                "-L/opt/homebrew/lib",
+                "-lsfml-graphics", "-lsfml-window", "-lsfml-system",
+                "-o", "${workspaceFolder}/build/gomoku"
+            ],
+            "group": { "kind": "build", "isDefault": true },
+            "problemMatcher": ["$gcc"]
+        }
+    ]
+}
