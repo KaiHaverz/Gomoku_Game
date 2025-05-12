@@ -8,7 +8,7 @@ C++五子棋小程序
 5. ./gomoku
 
 
-clang++ ./main1.cpp -o gomoku \
+clang++ ./main.cpp -o gomoku \
     -I/opt/homebrew/include \
     -L/opt/homebrew/lib \
     -lraylib \
