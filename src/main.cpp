@@ -1,46 +1,18 @@
-#include <raylib.h>
-
-const int BOARD_SIZE = 15;
-const int CELL_SIZE = 40;
-const int OFFSET_X = 50;
-const int OFFSET_Y = 50;
+#include "Board.hpp"
 
 int main() {
-    // 初始化窗口
-    InitWindow(800, 600, "五子棋 - Raylib");
+    // 初始化窗口（根据棋盘尺寸动态计算）
+    const int windowWidth = Board::PADDING * 2 + (Board::SIZE - 1) * Board::CELL_SIZE;
+    const int windowHeight = Board::PADDING * 2 + (Board::SIZE - 1) * Board::CELL_SIZE;
+    InitWindow(windowWidth, windowHeight, "五子棋 - 棋盘绘制");
     SetTargetFPS(60);
 
-    // 游戏主循环
+    Board board; // 创建棋盘对象
+
     while (!WindowShouldClose()) {
-        // 输入处理
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-            Vector2 mousePos = GetMousePosition();
-            int boardX = (mousePos.x - OFFSET_X) / CELL_SIZE;
-            int boardY = (mousePos.y - OFFSET_Y) / CELL_SIZE;
-            // 调试输出坐标
-            TraceLog(LOG_INFO, TextFormat("点击坐标: (%d, %d)", boardX, boardY));
-        }
-
-        // 渲染
         BeginDrawing();
-            ClearBackground(RAYWHITE); // 使用 RAYWHITE 替代直接颜色值
-            
-            // 绘制棋盘网格（使用 Color{} 显式构造）
-            for (int i = 0; i < BOARD_SIZE; i++) {
-                DrawLine(
-                    OFFSET_X, OFFSET_Y + i * CELL_SIZE,
-                    OFFSET_X + (BOARD_SIZE-1)*CELL_SIZE, OFFSET_Y + i * CELL_SIZE,
-                    Color{0, 0, 0, 255}  // 显式构造 BLACK
-                );
-                DrawLine(
-                    OFFSET_X + i * CELL_SIZE, OFFSET_Y,
-                    OFFSET_X + i * CELL_SIZE, OFFSET_Y + (BOARD_SIZE-1)*CELL_SIZE,
-                    Color{0, 0, 0, 255}  // 显式构造 BLACK
-                );
-            }
-
-            // 显示提示文字
-            DrawText("点击鼠标落子", 10, 10, 20, Color{0, 0, 0, 255});
+            ClearBackground(RAYWHITE);  // 清空背景
+            board.Draw();              // 绘制棋盘
         EndDrawing();
     }
 
