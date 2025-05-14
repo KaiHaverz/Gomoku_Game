@@ -1,39 +1,42 @@
-#ifdef GOMOKU_GAME_HPP
+// include/game.hpp
+#ifndef GOMOKU_GAME_HPP
 #define GOMOKU_GAME_HPP
 
-#include<raylib.h>
+#include <raylib.h>
+
+// 游戏常量
+const int BOARD_SIZE = 15;
+const int CELL_SIZE = 40;
+const int PADDING = 50;
+const int WINDOW_WIDTH = 850;
+const int WINDOW_HEIGHT = 660;
 
 // 颜色定义
-const Color BOARD_COLOR = {210, 180, 140, 255}; // 木质色
-const Color LINE_COLOR = BLACK;
-const Color TEXT_COLOR = BLACK;
+const Color BOARD_COLOR = {210, 180, 140, 255};
+const Color LINE_COLOR = Color{ 0, 0, 0, 255 };  // 替代BLACK
+const Color TEXT_COLOR = Color{ 0, 0, 0, 255 };  // 替代BLACK
 
 // 棋子类型
-enum Piece
-{
+enum Piece {
     PIECE_EMPTY = 0,
     PIECE_BLACK = 1,
     PIECE_WHITE = 2
 };
 
 // 游戏状态
-enum GameState
-{
-    STATE_MENU,      // 菜单
-    STATE_PLAYING,   // 游戏进行中
-    STATE_BLACK_WIN, // 黑棋胜利
-    STATE_WHITE_WIN  // 白棋胜利
+enum GameState {
+    STATE_MENU,
+    STATE_PLAYING,
+    STATE_BLACK_WIN,
+    STATE_WHITE_WIN
 };
 
-// 全局变量
-Piece board[BOARD_SIZE][BOARD_SIZE]; // 棋盘数组
-Piece currentPlayer = PIECE_BLACK;   // 当前玩家
-GameState gameState = STATE_MENU;    // 游戏状态
+// 全局变量声明
+extern Piece board[BOARD_SIZE][BOARD_SIZE];
+extern Piece currentPlayer;
+extern GameState gameState;
 
+// 游戏主循环
+void RunGame();
 
-//游戏主循环
-void RunGame()
-
-
-
-#endif
+#endif // GOMOKU_GAME_HPP

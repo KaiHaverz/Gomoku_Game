@@ -21,3 +21,19 @@ clang++ ./main.cpp -o gomoku \
 
 这是我写的cpp五子棋小程序,里面有AI对战功能,我希望您能帮我重新实现剪植算法,使得AI更智能.输出优化后的完整C++代码
 输出优化后完整的代码,辛苦你了!谢谢!
+
+
+第一次运行
+cmake ..
+make
+./gomoku
+
+
+再运行
+# 清除之前的构建
+cd build
+rm -rf *
+
+# 重新生成并编译
+cmake ..
+make

@@ -1,234 +1,304 @@
 #include <raylib.h>
-#include <vector>
-#include <utility>
-#include <cmath>
-#include <algorithm>
-#include <climits>
 
+//*********************一些常量的定义*********************
 // 游戏常量
-const int BOARD_SIZE = 15;
-const int CELL_SIZE = 40;
-const int PADDING = 50;
-const int WINDOW_WIDTH = PADDING * 2 + (BOARD_SIZE - 1) * CELL_SIZE;
-const int WINDOW_HEIGHT = PADDING * 2 + (BOARD_SIZE - 1) * CELL_SIZE;
+const int BOARD_SIZE = 15;     // 15x15棋盘
+const int CELL_SIZE = 40;      // 格子大小
+const int PADDING = 50;        // 边缘留白
+const int WINDOW_WIDTH = 850;  // 宽
+const int WINDOW_HEIGHT = 660; // 高
 
-// 颜色
-const Color BOARD_COLOR = { 210, 180, 140, 255 };
+// 颜色定义
+const Color BOARD_COLOR = {210, 180, 140, 255}; // 木质色
 const Color LINE_COLOR = BLACK;
+const Color TEXT_COLOR = BLACK;
 
 // 棋子类型
-enum Piece { PIECE_EMPTY = 0, PIECE_BLACK = 1, PIECE_WHITE = 2 };
+enum Piece
+{
+    PIECE_EMPTY = 0,
+    PIECE_BLACK = 1,
+    PIECE_WHITE = 2
+};
 
 // 游戏状态
-enum GameState { STATE_MENU, STATE_PLAYING, STATE_BLACK_WIN, STATE_WHITE_WIN };
+enum GameState
+{
+    STATE_MENU,      // 菜单
+    STATE_PLAYING,   // 游戏进行中
+    STATE_BLACK_WIN, // 黑棋胜利
+    STATE_WHITE_WIN  // 白棋胜利
+};
 
 // 全局变量
-Piece board[BOARD_SIZE][BOARD_SIZE];
-Piece currentPlayer = PIECE_BLACK;
-GameState gameState = STATE_MENU;
-bool vsAI = false;
+Piece board[BOARD_SIZE][BOARD_SIZE]; // 棋盘数组
+Piece currentPlayer = PIECE_BLACK;   // 当前玩家
+GameState gameState = STATE_MENU;    // 游戏状态
 
-// ==================== 初始化棋盘 ====================
-void InitBoard() {
+//*********************按钮*********************
+// 按钮结构体
+struct Button
+{
+    Rectangle bounds;
+    const char *text;
+    bool isHovered;
+};
+
+// 初始化按钮
+Button CreateButton(float x, float y, float width, float height, const char *text)
+{
+    return (Button){
+        .bounds = {x, y, width, height},
+        .text = text,
+        .isHovered = false};
+}
+
+// 绘制按钮
+void DrawButton(Button *button)
+{
+    Color btnColor = button->isHovered ? SKYBLUE : LIGHTGRAY;
+    DrawRectangleRec(button->bounds, btnColor);
+    DrawRectangleLinesEx(button->bounds, 2, DARKGRAY);
+
+    int textWidth = MeasureText(button->text, 30);
+    DrawText(button->text,
+             button->bounds.x + (button->bounds.width - textWidth) / 2,
+             button->bounds.y + 15,
+             30, DARKGRAY);
+}
+
+//*********************棋盘*********************
+void InitBoard()
+{
     for (int y = 0; y < BOARD_SIZE; y++)
+    {
         for (int x = 0; x < BOARD_SIZE; x++)
+        {
             board[y][x] = PIECE_EMPTY;
+        }
+    }
     currentPlayer = PIECE_BLACK;
 }
 
-// ==================== 胜负判断 ====================
-bool CheckWin(int x, int y) {
-    const int dirs[4][2] = {{1,0},{0,1},{1,1},{1,-1}};
-    Piece target = board[y][x];
-    for (auto [dx, dy] : dirs) {
+// 绘制棋盘
+void DrawBoard()
+{
+    // 1. 绘制棋盘背景
+    DrawRectangle(
+        PADDING - 10,
+        PADDING - 10,
+        (BOARD_SIZE - 1) * CELL_SIZE + 20,
+        (BOARD_SIZE - 1) * CELL_SIZE + 20,
+        BOARD_COLOR);
+
+    // 2. 绘制网格线
+    for (int i = 0; i < BOARD_SIZE; i++)
+    {
+        // 横线
+        DrawLineEx(
+            Vector2{(float)PADDING, (float)(PADDING + i * CELL_SIZE)},
+            Vector2{(float)(PADDING + (BOARD_SIZE - 1) * CELL_SIZE), (float)(PADDING + i * CELL_SIZE)},
+            1.5f,
+            LINE_COLOR);
+        // 竖线
+        DrawLineEx(
+            Vector2{(float)(PADDING + i * CELL_SIZE), (float)PADDING},
+            Vector2{(float)(PADDING + i * CELL_SIZE), (float)(PADDING + (BOARD_SIZE - 1) * CELL_SIZE)},
+            1.5f,
+            LINE_COLOR);
+    }
+
+    // 3. 绘制星位点（天元+四角）
+    const int starPoints[5][2] = {{3, 3}, {11, 3}, {3, 11}, {11, 11}, {7, 7}};
+    for (const auto &point : starPoints)
+    {
+        DrawCircle(
+            PADDING + point[0] * CELL_SIZE,
+            PADDING + point[1] * CELL_SIZE,
+            5,
+            LINE_COLOR);
+    }
+
+    // 4. 绘制棋子
+    for (int y = 0; y < BOARD_SIZE; y++)
+    {
+        for (int x = 0; x < BOARD_SIZE; x++)
+        {
+            if (board[y][x] == PIECE_BLACK)
+            {
+                DrawCircle(
+                    PADDING + x * CELL_SIZE,
+                    PADDING + y * CELL_SIZE,
+                    CELL_SIZE / 2 - 2,
+                    BLACK);
+            }
+            else if (board[y][x] == PIECE_WHITE)
+            {
+                DrawCircle(
+                    PADDING + x * CELL_SIZE,
+                    PADDING + y * CELL_SIZE,
+                    CELL_SIZE / 2 - 2,
+                    WHITE);
+                DrawCircleLines(
+                    PADDING + x * CELL_SIZE,
+                    PADDING + y * CELL_SIZE,
+                    CELL_SIZE / 2 - 2,
+                    BLACK);
+            }
+        }
+    }
+}
+
+//*********************检查五子连珠*********************
+bool CheckWin(int x, int y)
+{
+    if (board[y][x] == PIECE_EMPTY)
+        return false;
+
+    const int dirs[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
+    for (const auto &dir : dirs)
+    {
         int count = 1;
-        for (int i = 1; i < 5; ++i) {
+        int dx = dir[0], dy = dir[1];
+
+        // 正向检查
+        for (int i = 1; i < 5; i++)
+        {
             int nx = x + dx * i, ny = y + dy * i;
-            if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) break;
-            if (board[ny][nx] == target) count++;
-            else break;
+            if (nx >= BOARD_SIZE || ny >= BOARD_SIZE || board[ny][nx] != board[y][x])
+                break;
+            count++;
         }
-        for (int i = 1; i < 5; ++i) {
+
+        // 反向检查
+        for (int i = 1; i < 5; i++)
+        {
             int nx = x - dx * i, ny = y - dy * i;
-            if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) break;
-            if (board[ny][nx] == target) count++;
-            else break;
+            if (nx < 0 || ny < 0 || board[ny][nx] != board[y][x])
+                break;
+            count++;
         }
-        if (count >= 5) return true;
+
+        if (count >= 5)
+            return true;
     }
     return false;
 }
 
-// ==================== AI评估函数 ====================
-int EvaluatePoint(int x, int y, Piece player) {
-    if (board[y][x] != PIECE_EMPTY) return 0;
-    int score = 0;
-    const int dirs[4][2] = {{1,0},{0,1},{1,1},{1,-1}};
-    for (auto [dx, dy] : dirs) {
-        int count = 1;
-        for (int i = 1; i < 5; ++i) {
-            int nx = x + dx * i, ny = y + dy * i;
-            if (nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE &&
-                board[ny][nx] == player)
-                count++;
-            else break;
-        }
-        for (int i = 1; i < 5; ++i) {
-            int nx = x - dx * i, ny = y - dy * i;
-            if (nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE &&
-                board[ny][nx] == player)
-                count++;
-            else break;
-        }
-        score += pow(10, count);
+//*********************UI设计*********************
+void DrawGameUI()
+{
+    // 当前玩家提示
+    const char *text = (currentPlayer == PIECE_BLACK) ? "NOW: BLACK" : "NOW: WHITE";
+    DrawText(text, 20, 20, 20, TEXT_COLOR);
+
+    // 胜利提示
+    if (gameState == STATE_BLACK_WIN)
+    {
+        DrawText("BLACK WIN!",
+                 WINDOW_WIDTH / 2 - MeasureText("BLACK WIN!", 40) / 2,
+                 WINDOW_HEIGHT / 2 - 20,
+                 40,
+                 RED);
     }
-    return score;
+    else if (gameState == STATE_WHITE_WIN)
+    {
+        DrawText("WHITE WIN!",
+                 WINDOW_WIDTH / 2 - MeasureText("WHITE WIN!", 40) / 2,
+                 WINDOW_HEIGHT / 2 - 20,
+                 40,
+                 RED);
+    }
+
+    // 操作提示
+    DrawText("Press 'R' to return to menu",
+             20,
+             WINDOW_HEIGHT - 30,
+             20,
+             DARKGRAY);
 }
 
-// 获取所有候选位置（考虑周围有棋子的空位）
-std::vector<std::pair<int, int>> GetCandidateMoves() {
-    std::vector<std::pair<int, int>> moves;
-    for (int y = 0; y < BOARD_SIZE; ++y) {
-        for (int x = 0; x < BOARD_SIZE; ++x) {
-            if (board[y][x] != PIECE_EMPTY) continue;
-            // 如果周围有邻居就加入候选
-            bool hasNeighbor = false;
-            for (int dy = -1; dy <= 1 && !hasNeighbor; ++dy) {
-                for (int dx = -1; dx <= 1; ++dx) {
-                    int nx = x + dx, ny = y + dy;
-                    if (nx >= 0 && ny >= 0 && nx < BOARD_SIZE && ny < BOARD_SIZE) {
-                        if (board[ny][nx] != PIECE_EMPTY) {
-                            hasNeighbor = true;
-                            break;
+// 绘制开始菜单
+void DrawMenu()
+{
+    ClearBackground(RAYWHITE);
+
+    // 绘制标题
+    DrawText("Gomoku Game",
+             WINDOW_WIDTH / 2 - MeasureText("Gomoku Game", 50) / 2,
+             150, 50, BLACK);
+
+    // 创建并绘制按钮
+    Button btnPair = CreateButton(
+        WINDOW_WIDTH / 2 - 100,
+        WINDOW_HEIGHT / 2 - 30,
+        200, 60, "Pair Game");
+
+    // 更新按钮状态
+    btnPair.isHovered = CheckCollisionPointRec(GetMousePosition(), btnPair.bounds);
+
+    // 绘制按钮
+    DrawButton(&btnPair);
+
+    // 检测点击
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && btnPair.isHovered)
+    {
+        gameState = STATE_PLAYING;
+        InitBoard();
+    }
+}
+
+int main()
+{
+    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Gomoku Game");
+    SetTargetFPS(60);
+
+    while (!WindowShouldClose())
+    {
+        BeginDrawing();
+
+        if (gameState == STATE_MENU)
+        {
+            DrawMenu();
+        }
+        else
+        {
+            // 游戏逻辑
+            if (gameState == STATE_PLAYING)
+            {
+                Vector2 mousePos = GetMousePosition();
+
+                if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+                {
+                    int x = (mousePos.x - PADDING) / CELL_SIZE;
+                    int y = (mousePos.y - PADDING) / CELL_SIZE;
+
+                    if (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE && board[y][x] == PIECE_EMPTY)
+                    {
+                        board[y][x] = currentPlayer;
+
+                        if (CheckWin(x, y))
+                        {
+                            gameState = (currentPlayer == PIECE_BLACK) ? STATE_BLACK_WIN : STATE_WHITE_WIN;
+                        }
+                        else
+                        {
+                            currentPlayer = (currentPlayer == PIECE_BLACK) ? PIECE_WHITE : PIECE_BLACK;
                         }
                     }
                 }
             }
-            if (hasNeighbor)
-                moves.emplace_back(x, y);
-        }
-    }
-    return moves;
-}
 
-// ==================== Alpha-Beta 剪枝 ====================
-int AlphaBeta(int depth, int alpha, int beta, bool maximizing) {
-    if (depth == 0)
-        return 0;
-
-    Piece me = maximizing ? PIECE_WHITE : PIECE_BLACK;
-    Piece opp = maximizing ? PIECE_BLACK : PIECE_WHITE;
-
-    std::vector<std::pair<int, int>> moves = GetCandidateMoves();
-    if (moves.empty()) return 0;
-
-    int bestScore = maximizing ? -INT_MAX : INT_MAX;
-    for (auto [x, y] : moves) {
-        board[y][x] = me;
-        if (CheckWin(x, y)) {
-            board[y][x] = PIECE_EMPTY;
-            return maximizing ? 1000000 : -1000000;
-        }
-
-        int score = AlphaBeta(depth - 1, alpha, beta, !maximizing);
-        board[y][x] = PIECE_EMPTY;
-
-        if (maximizing) {
-            bestScore = std::max(bestScore, score);
-            alpha = std::max(alpha, score);
-        } else {
-            bestScore = std::min(bestScore, score);
-            beta = std::min(beta, score);
-        }
-
-        if (beta <= alpha) break;
-    }
-    return bestScore;
-}
-
-// ==================== AI落子 ====================
-void AIMove() {
-    int bestScore = -INT_MAX;
-    int bestX = -1, bestY = -1;
-
-    std::vector<std::pair<int, int>> moves = GetCandidateMoves();
-    for (auto [x, y] : moves) {
-        board[y][x] = PIECE_WHITE;
-        int score = EvaluatePoint(x, y, PIECE_WHITE) + 
-                    AlphaBeta(2, -INT_MAX, INT_MAX, false);
-        board[y][x] = PIECE_EMPTY;
-
-        if (score > bestScore) {
-            bestScore = score;
-            bestX = x;
-            bestY = y;
-        }
-    }
-
-    if (bestX != -1 && bestY != -1) {
-        board[bestY][bestX] = PIECE_WHITE;
-        if (CheckWin(bestX, bestY))
-            gameState = STATE_WHITE_WIN;
-        else
-            currentPlayer = PIECE_BLACK;
-    }
-}
-
-// ==================== 主函数入口 ====================
-int main() {
-    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Gomoku AI");
-    InitBoard();
-    gameState = STATE_PLAYING;
-    SetTargetFPS(60);
-
-    while (!WindowShouldClose()) {
-        BeginDrawing();
-        ClearBackground(RAYWHITE);
-
-        // 绘制棋盘
-        for (int i = 0; i < BOARD_SIZE; i++) {
-            DrawLine(PADDING, PADDING + i * CELL_SIZE,
-                     PADDING + (BOARD_SIZE - 1) * CELL_SIZE, PADDING + i * CELL_SIZE, LINE_COLOR);
-            DrawLine(PADDING + i * CELL_SIZE, PADDING,
-                     PADDING + i * CELL_SIZE, PADDING + (BOARD_SIZE - 1) * CELL_SIZE, LINE_COLOR);
-        }
-
-        // 绘制棋子
-        for (int y = 0; y < BOARD_SIZE; y++) {
-            for (int x = 0; x < BOARD_SIZE; x++) {
-                if (board[y][x] == PIECE_BLACK)
-                    DrawCircle(PADDING + x * CELL_SIZE, PADDING + y * CELL_SIZE, 16, BLACK);
-                else if (board[y][x] == PIECE_WHITE)
-                    DrawCircle(PADDING + x * CELL_SIZE, PADDING + y * CELL_SIZE, 16, LIGHTGRAY);
+            if (IsKeyPressed(KEY_R))
+            {
+                gameState = STATE_MENU;
             }
+
+            // 绘制游戏
+            ClearBackground(RAYWHITE);
+            DrawBoard();
+            DrawGameUI();
         }
-
-        // 鼠标点击下棋
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && gameState == STATE_PLAYING && currentPlayer == PIECE_BLACK) {
-            Vector2 mouse = GetMousePosition();
-            int x = round((mouse.x - PADDING) / CELL_SIZE);
-            int y = round((mouse.y - PADDING) / CELL_SIZE);
-
-            if (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE && board[y][x] == PIECE_EMPTY) {
-                board[y][x] = PIECE_BLACK;
-                if (CheckWin(x, y)) {
-                    gameState = STATE_BLACK_WIN;
-                } else {
-                    currentPlayer = PIECE_WHITE;
-                }
-            }
-        }
-
-        // AI 行动
-        if (currentPlayer == PIECE_WHITE && gameState == STATE_PLAYING) {
-            AIMove();
-        }
-
-        // 胜利信息
-        if (gameState == STATE_BLACK_WIN)
-            DrawText("Black Wins!", 20, 20, 30, MAROON);
-        else if (gameState == STATE_WHITE_WIN)
-            DrawText("White Wins!", 20, 20, 30, BLUE);
 
         EndDrawing();
     }
