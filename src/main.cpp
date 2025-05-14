@@ -595,10 +595,10 @@ int main()
 
     // 初始化音频设备
     InitAudioDevice();
-    bgMusic = LoadMusicStream("Sound/bg_music.MP3");
-    placeSound = LoadSound("Sound/place.mp3");
-    winSound = LoadSound("Sound/win.wav");
-    aiWinSound = LoadSound("Sound/ai_win.MP3");
+    bgMusic = LoadMusicStream("sound/bg_music.MP3");
+    placeSound = LoadSound("sound/place.mp3");
+    winSound = LoadSound("sound/win.wav");
+    aiWinSound = LoadSound("sound/ai_win.MP3");
 
     bgMusic.looping = true;
     SetMusicVolume(bgMusic, 0.5f);

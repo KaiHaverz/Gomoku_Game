@@ -12,8 +12,8 @@
                 "-I/opt/homebrew/include",
                 "-L/opt/homebrew/lib",
                 "-lraylib",
-                "-framework", "OpenGL",  // macOS 必需
-                "-framework", "Cocoa"    // macOS 必需
+                "-framework", "OpenGL",  
+                "-framework", "Cocoa"    
             ],
             "group": {
                 "kind": "build",

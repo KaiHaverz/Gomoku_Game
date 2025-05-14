@@ -1,14 +1,8 @@
-C++五子棋小程序
+# 基于Raylib的五子棋小游戏
 
-运行步骤
-1. cd build 
-2. brew istall cmake
-3. cmake ..
-4. make
-5. ./gomoku
-
-
-clang++ ./test.cpp -o gomoku \
+## 运行步骤
+编译
+clang++ ./src/test.cpp -o gomoku \
     -I/opt/homebrew/include \
     -L/opt/homebrew/lib \
     -lraylib \
@@ -16,24 +10,6 @@ clang++ ./test.cpp -o gomoku \
     -framework Cocoa \
     -std=c++17
 
-
+运行
 ./gomoku
 
-这是我写的cpp五子棋小程序,里面有AI对战功能,我希望您能帮我重新实现剪植算法,使得AI更智能.输出优化后的完整C++代码
-输出优化后完整的代码,辛苦你了!谢谢!
-
-
-第一次运行
-cmake ..
-make
-./gomoku
-
-
-再运行
-# 清除之前的构建
-cd build
-rm -rf *
-
-# 重新生成并编译
-cmake ..
-make
