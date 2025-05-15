@@ -1,7 +1,9 @@
-# 基于Raylib的五子棋小游戏
+# 基于Raylib图形库的C++五子棋小游戏
 
 ## 1 开发环境
-VsCode
+- macOS
+- VsCode
+- Raylib 图形库
 
 ## 2 环境配置
 brew install raylib
@@ -20,11 +22,4 @@ clang++ ./src/main.cpp -o gomoku \
 ./gomoku
 
 ## 4 功能介绍
-
-clang++ ./src/test.cpp -o gomoku \
-    -I/opt/homebrew/include \
-    -L/opt/homebrew/lib \
-    -lraylib \
-    -framework OpenGL \
-    -framework Cocoa \
-    -std=c++17
+详情见项目说明文档
