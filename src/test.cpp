@@ -1,75 +1,83 @@
-#include <raylib.h>
+//****************第一部分 头文件****************
+#include <iostream>
+#include <raylib.h> //图形库
 #include <vector>
 #include <algorithm>
-#include <climits>
-#include <stack>
+#include <climits> //// 提供 INT_MAX 和 INT_MIN 等常量
+#include <stack>   //栈的数据结构,后续用于实现悔棋的功能.
 
+//****************第二部分 游戏常量定义,基础枚举类型,结构体定义****************
 // 游戏常量
-const int BOARD_SIZE = 15;
-const int CELL_SIZE = 40;
-const int PADDING = 50;
+const int BOARD_SIZE = 15; // 15x15棋盘
+const int CELL_SIZE = 40;  // 每个格子的大小
+const int PADDING = 50;    // 边缘距离
+// 窗口宽高
 const int WINDOW_WIDTH = 1000;
 const int WINDOW_HEIGHT = 660;
 
 // 颜色定义
-const Color BOARD_COLOR = {210, 180, 140, 255};
-const Color LINE_COLOR = BLACK;
-const Color TEXT_COLOR = BLACK;
-const Color UI_BG_COLOR = {136, 136, 136, 255};
+const Color BOARD_COLOR = {210, 180, 140, 255}; // 棋盘背景色,木色
+const Color LINE_COLOR = BLACK;                 // 线的颜色
+const Color TEXT_COLOR = BLACK;                 // 文字的颜色
+const Color UI_BG_COLOR = {136, 136, 136, 255}; // 右侧UI的颜色
 
 // 棋子类型
 enum Piece
 {
-    PIECE_EMPTY = 0,
-    PIECE_BLACK = 1,
-    PIECE_WHITE = 2
+    PIECE_EMPTY = 0, // 空
+    PIECE_BLACK = 1, // 黑子
+    PIECE_WHITE = 2  // 白子
 };
 
 // 游戏状态
 enum GameState
 {
-    STATE_MENU,
-    STATE_PLAYING,
-    STATE_BLACK_WIN,
-    STATE_WHITE_WIN
+    STATE_MENU,      // 菜单
+    STATE_PLAYING,   // 游戏进行中
+    STATE_BLACK_WIN, // 黑子获胜
+    STATE_WHITE_WIN  // 白子获胜
 };
 
-// 游戏模式
+// 三种游戏模式
 enum GameMode
 {
-    MODE_PVP,
-    MODE_PVE_EASY,
-    MODE_PVE_HARD
+    MODE_PVP,      // 玩家对战
+    MODE_PVE_EASY, // easy AI
+    MODE_PVE_HARD  // hard AI
 };
 
 // 按钮结构体
 struct Button
 {
-    Rectangle bounds;
-    const char *text;
-    bool isHovered;
+    Rectangle bounds; // 按钮的边界
+    const char *text; // 文本
+    bool isHovered;   // 是否悬停
 };
 
+//****************第三部分 游戏类的定义****************
+// 程序的核心部分
 class GomokuGame
 {
 public:
     GomokuGame() : gameMode(MODE_PVP), gameState(STATE_MENU), currentPlayer(PIECE_BLACK),
                    musicPlaying(false)
     {
-        InitAudioDevice();
-        bgMusic = LoadMusicStream("sound/bg_music.MP3");
-        placeSound = LoadSound("sound/place.mp3");
-        winSound = LoadSound("sound/win.wav");
-        aiWinSound = LoadSound("sound/ai_win.MP3");
+        InitAudioDevice();                               // 初始化音频设备
+        bgMusic = LoadMusicStream("sound/bg_music.MP3"); // 加载背景音乐
+        placeSound = LoadSound("sound/place.mp3");       // 加载落子音效
+        winSound = LoadSound("sound/win.wav");           // 黑子获胜音效
+        aiWinSound = LoadSound("sound/ai_win.MP3");      // AI获胜音效
 
+        // 音量
         SetMusicVolume(bgMusic, 0.5f);
         SetSoundVolume(placeSound, 0.7f);
         SetSoundVolume(winSound, 0.8f);
         SetSoundVolume(aiWinSound, 0.8f);
 
-        bgMusic.looping = true;
+        bgMusic.looping = true; // 循环播放
     }
 
+    // 析构函数,释放资源
     ~GomokuGame()
     {
         UnloadMusicStream(bgMusic);
@@ -79,17 +87,21 @@ public:
         CloseAudioDevice();
     }
 
+    // 游戏主循环函数
     void Run()
     {
-        InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Gomoku Game");
-        SetTargetFPS(60);
+        InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Gomoku Game"); // 创建窗口
+        SetTargetFPS(60);                                       // 设置帧率60
 
+        // 游戏住循环
         while (!WindowShouldClose())
         {
+            // 更新游戏状态
             Update();
             Draw();
         }
 
+        // 关闭窗口
         CloseWindow();
     }
 
@@ -105,11 +117,13 @@ private:
     Sound aiWinSound;
     bool musicPlaying;
 
+    // 创建一个按钮变量
     Button CreateButton(float x, float y, float width, float height, const char *text)
     {
         return (Button){{x, y, width, height}, text, false};
     }
 
+    // 绘制按钮
     void DrawButton(Button *button)
     {
         Color btnColor = button->isHovered ? SKYBLUE : LIGHTGRAY;
@@ -122,6 +136,7 @@ private:
                  20, DARKGRAY);
     }
 
+    // 初始化棋盘,此时没有任何棋子
     void InitBoard()
     {
         while (!moveHistory.empty())
@@ -136,13 +151,14 @@ private:
         currentPlayer = PIECE_BLACK;
     }
 
-    // 清空棋盘
+    // 清空棋盘,调用InitBoard()函数即可
     void ClearBoard()
     {
         InitBoard();
         gameState = STATE_PLAYING;
     }
 
+    // 绘制棋盘及其元素
     void DrawBoard()
     {
         // 棋盘背景
@@ -166,7 +182,7 @@ private:
                 1.5f, LINE_COLOR);
         }
 
-        // 星位点
+        // 星位点(五子棋棋盘的标准布局)
         const int starPoints[5][2] = {{3, 3}, {11, 3}, {3, 11}, {11, 11}, {7, 7}};
         for (const auto &point : starPoints)
         {
@@ -176,7 +192,7 @@ private:
                 5, LINE_COLOR);
         }
 
-        // 棋子
+        // 放置棋子
         for (int y = 0; y < BOARD_SIZE; y++)
         {
             for (int x = 0; x < BOARD_SIZE; x++)
@@ -203,6 +219,7 @@ private:
         }
     }
 
+    // 检查是否有五子连珠,检查黑子和白子在四个方向(横,竖,左斜,右斜)
     bool CheckWin(int x, int y)
     {
         if (board[y][x] == PIECE_EMPTY)
@@ -230,6 +247,7 @@ private:
                 count++;
             }
 
+            // 如果同一个方向等于五个字,就直接返回
             if (count >= 5)
                 return true;
         }
@@ -237,6 +255,7 @@ private:
         return false;
     }
 
+    // 悔棋函数,使用栈的数据结构实现,撤销最近的一步棋
     void UndoMove()
     {
         if (moveHistory.empty())
@@ -247,6 +266,7 @@ private:
         board[lastMove.second][lastMove.first] = PIECE_EMPTY;
         currentPlayer = (currentPlayer == PIECE_BLACK) ? PIECE_WHITE : PIECE_BLACK;
 
+        // 如果撤回的是AI的轮次,则回退两步棋(AI一次,人类一次),保证悔棋完成后是人类的轮次
         if ((gameMode == MODE_PVE_EASY || gameMode == MODE_PVE_HARD) &&
             currentPlayer == PIECE_WHITE && !moveHistory.empty())
         {
@@ -257,6 +277,8 @@ private:
         }
     }
 
+    //***********以下是AI算法部分************
+    // 评估函数,评估棋盘的得分,从而选择下一步棋的最佳位置
     int EvaluateBoard()
     {
         int score = 0;
@@ -324,6 +346,7 @@ private:
         return score;
     }
 
+    // 获取当前棋盘上所有可下的位置
     std::vector<std::pair<int, int>> GetPossibleMoves()
     {
         std::vector<std::pair<int, int>> moves;
@@ -366,6 +389,7 @@ private:
         return moves;
     }
 
+    // 递归实现最小最大算法,加上Alpha-Beta 剪枝，用于AI决策
     int Minimax(int depth, int alpha, int beta, bool maximizingPlayer)
     {
         if (depth == 0)
@@ -419,6 +443,7 @@ private:
         }
     }
 
+    // 实现AI下棋的逻辑
     void AIPlay(bool hardMode)
     {
         auto moves = GetPossibleMoves();
@@ -491,7 +516,9 @@ private:
             currentPlayer = (currentPlayer == PIECE_BLACK) ? PIECE_WHITE : PIECE_BLACK;
         }
     }
+    // 至此,AI游戏算法部分完成
 
+    // 绘制游戏右侧UI,边栏部分
     void DrawGameUI()
     {
         DrawRectangle(700, 0, 300, WINDOW_HEIGHT, UI_BG_COLOR);
@@ -518,7 +545,7 @@ private:
         btnUndo.isHovered = CheckCollisionPointRec(GetMousePosition(), btnUndo.bounds);
         DrawButton(&btnUndo);
 
-        // 清空棋盘按钮（新增）
+        // 清空棋盘按钮
         Button btnClear = CreateButton(720, 150, 150, 40, "Clear Board");
         btnClear.isHovered = CheckCollisionPointRec(GetMousePosition(), btnClear.bounds);
         DrawButton(&btnClear);
@@ -571,6 +598,7 @@ private:
         }
     }
 
+    // 绘制游戏主菜单界面
     void DrawMenu()
     {
         ClearBackground(RAYWHITE);
@@ -618,6 +646,7 @@ private:
         }
     }
 
+    // 更新逻辑
     void Update()
     {
         if (musicPlaying)
@@ -626,6 +655,7 @@ private:
         }
     }
 
+    // 绘制图像的函数,把UI绘制出来
     void Draw()
     {
         BeginDrawing();
@@ -684,9 +714,11 @@ private:
     }
 };
 
+// 主函数
 int main()
 {
     GomokuGame game;
     game.Run();
+
     return 0;
 }
