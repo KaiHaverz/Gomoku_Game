@@ -136,7 +136,7 @@ private:
         currentPlayer = PIECE_BLACK;
     }
 
-    // 清空棋盘（新功能）
+    // 清空棋盘
     void ClearBoard()
     {
         InitBoard();
