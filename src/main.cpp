@@ -93,7 +93,7 @@ public:
         InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Gomoku Game"); // 创建窗口
         SetTargetFPS(60);                                       // 设置帧率60
 
-        // 游戏住循环
+        // 游戏主循环
         while (!WindowShouldClose())
         {
             // 更新游戏状态
