@@ -23,3 +23,7 @@ clang++ ./src/main.cpp -o gomoku \
 
 ## 4 功能介绍
 详情见项目说明文档
+
+## 5 效果预览
+![alt text](./photos/image.png)
+![alt text](./photos/image-1.png)
